@@ -6,6 +6,20 @@ from datetime import datetime
 import json
 import re
 import os
+import os
+from urllib.parse import urlparse
+
+# Replace the SQLite config with this:
+if 'DATABASE_URL' in os.environ:
+    # Use PostgreSQL on Render
+    url = urlparse(os.environ['DATABASE_URL'])
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{url.username}:{url.password}@{url.hostname}:{url.port}/{url.path[1:]}'
+else:
+    # Use SQLite locally
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///inventory.db'
+
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', os.urandom(24))
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///inventory.db'
