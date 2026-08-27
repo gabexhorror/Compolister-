@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compolister</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+<aside class="sidebar">
+    <div class="logo">
+        <h1>⚡ ComponentLab</h1>
+    </div>
+    <nav class="nav-menu">
+        <button class="nav-item active" data-tab="components">
+            <span>📦</span> Components
+        </button>
+        <button class="nav-item" data-tab="projects">
+            <span>🔧</span> Projects
+        </button>
+        <button class="nav-item" data-tab="dashboard">
+            <span>📊</span> Dashboard
+        </button>
+    </nav>
+    <div class="sidebar-footer">
+        <div style="margin-bottom: 10px;">
+            <p style="color: white; margin-bottom: 5px;" id="userInfo">Loading...</p>
+        </div>
+        <button class="btn btn-secondary" onclick="logout()" style="width: 100%;">
+            Logout
+        </button>
+    </div>
+</aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Components Tab -->
+            <div id="components-tab" class="tab-content active">
+                <div class="page-header">
+                    <h2>Component Inventory</h2>
+                    <button class="btn btn-primary" onclick="showAddComponent()">
+                        + Add Component
+                    </button>
+                </div>
+
+                <div class="search-bar">
+                    <input type="text" id="searchInput" placeholder="Search components..." oninput="searchComponents()">
+                    <select id="typeFilter" onchange="searchComponents()">
+                        <option value="">All Types</option>
+                        <option value="resistor">Resistors</option>
+                        <option value="capacitor">Capacitors</option>
+                        <option value="inductor">Inductors</option>
+                        <option value="diode">Diodes</option>
+                        <option value="transistor">Transistors</option>
+                        <option value="ic">ICs</option>
+                        <option value="led">LEDs</option>
+                        <option value="connector">Connectors</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div class="components-grid" id="componentsGrid">
+                    <!-- Components will be loaded here as cards -->
+                </div>
+            </div>
+
+            <!-- Projects Tab -->
+            <div id="projects-tab" class="tab-content">
+                <div class="page-header">
+                    <h2>My Projects</h2>
+                    <button class="btn btn-primary" onclick="showAddProject()">
+                        + New Project
+                    </button>
+                </div>
+                <div class="projects-grid" id="projectsGrid">
+                    <!-- Projects will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Dashboard Tab -->
+            <div id="dashboard-tab" class="tab-content">
+                <div class="page-header">
+                    <h2>Dashboard</h2>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Total Components</h3>
+                        <p class="stat-value" id="totalComponents">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Low Stock</h3>
+                        <p class="stat-value" id="lowStock">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Projects</h3>
+                        <p class="stat-value" id="totalProjects">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Categories</h3>
+                        <p class="stat-value" id="totalCategories">0</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Component Modal -->
+    <div id="componentModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 id="modalTitle">Add Component</h2>
+            <form id="componentForm">
+                <input type="hidden" id="componentId">
+                
+                <div class="form-group">
+                    <label>Component Type</label>
+                    <select id="componentType" onchange="updateSpecFields()">
+                        <option value="resistor">Resistor</option>
+                        <option value="capacitor">Capacitor</option>
+                        <option value="inductor">Inductor</option>
+                        <option value="diode">Diode</option>
+                        <option value="transistor">Transistor</option>
+                        <option value="ic">IC</option>
+                        <option value="led">LED</option>
+                        <option value="connector">Connector</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input type="text" id="componentName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Value</label>
+                        <input type="text" id="componentValue" placeholder="e.g., 10kΩ, 100µF">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Quantity</label>
+                        <input type="number" id="componentQuantity" min="0" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Location</label>
+                        <input type="text" id="componentLocation" placeholder="e.g., Drawer A3">
+                    </div>
+                </div>
+                
+                <!-- Dynamic spec fields based on type -->
+                <div id="specFields"></div>
+                
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="componentNotes" rows="3"></textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Component</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Project Modal -->
+    <div id="projectModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeProjectModal()">&times;</span>
+            <h2 id="projectModalTitle">New Project</h2>
+            <form id="projectForm">
+                <input type="hidden" id="projectId">
+                
+                <div class="form-group">
+                    <label>Project Name</label>
+                    <input type="text" id="projectName" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="projectDescription" rows="3"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="projectStatus">
+                        <option value="Planning">Planning</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Completed">Completed</option>
+                        <option value="On Hold">On Hold</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Components Needed</label>
+                    <div id="projectComponents"></div>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="addComponentToProject()">
+                        + Add Component
+                    </button>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeProjectModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Project</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
